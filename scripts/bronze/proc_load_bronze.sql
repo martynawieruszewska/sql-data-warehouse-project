@@ -1,101 +1,245 @@
 /*
 ===============================================================================
-Bronze Layer: Truncate and Validate Tables
+Stored Procedure: Load Bronze Layer (Source -> Bronze)
 ===============================================================================
-
 Script Purpose:
-    This script clears all Bronze layer tables before reloading source data.
-    After each import, the SELECT statements can be used to inspect the loaded
-    records and verify the total number of rows.
+    This stored procedure loads data into the 'bronze' schema from external CSV files.
+    It performs the following actions:
+    - Truncates the bronze tables before loading data.
+    - Uses the PostgreSQL COPY command to load data from CSV files into bronze tables.
+    - Measures the load duration for each table.
+    - Measures the total batch load duration.
+    - Handles errors during the loading process.
 
-    Recommended workflow:
-        1. Truncate the target Bronze table.
-        2. Import the corresponding CSV file using DBeaver.
-        3. Preview the loaded data.
-        4. Validate the row count.
+Parameters:
+    None.
+    This stored procedure does not accept any parameters or return any values.
+
+Usage Example:
+    CALL bronze.load_bronze();
 ===============================================================================
 */
 
+CREATE OR REPLACE PROCEDURE bronze.load_bronze()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    start_time       TIMESTAMP;
+    end_time         TIMESTAMP;
+    batch_start_time TIMESTAMP;
+    batch_end_time   TIMESTAMP;
+BEGIN
 
--- ============================================================================
--- CRM Customer Information
--- Source file: datasets/source_crm/cust_info.csv
--- ============================================================================
+    batch_start_time := clock_timestamp();
 
-TRUNCATE TABLE bronze.crm_cust_info;
+    RAISE NOTICE '================================================';
+    RAISE NOTICE 'Loading Bronze Layer';
+    RAISE NOTICE '================================================';
 
-SELECT *
-FROM bronze.crm_cust_info;
-
-SELECT COUNT(*)
-FROM bronze.crm_cust_info;
-
-
--- ============================================================================
--- CRM Product Information
--- Source file: datasets/source_crm/prd_info.csv
--- ============================================================================
-
-TRUNCATE TABLE bronze.crm_prd_info;
-
-SELECT *
-FROM bronze.crm_prd_info;
-
-SELECT COUNT(*)
-FROM bronze.crm_prd_info;
+    RAISE NOTICE '------------------------------------------------';
+    RAISE NOTICE 'Loading CRM Tables';
+    RAISE NOTICE '------------------------------------------------';
 
 
--- ============================================================================
--- CRM Sales Details
--- Source file: datasets/source_crm/sales_details.csv
--- ============================================================================
+    -- ============================================================
+    -- CRM Customer Information
+    -- ============================================================
 
-TRUNCATE TABLE bronze.crm_sales_details;
+    start_time := clock_timestamp();
 
-SELECT *
-FROM bronze.crm_sales_details;
+    RAISE NOTICE '>> Truncating Table: bronze.crm_cust_info';
 
-SELECT COUNT(*)
-FROM bronze.crm_sales_details;
+    TRUNCATE TABLE bronze.crm_cust_info;
 
+    RAISE NOTICE '>> Inserting Data Into: bronze.crm_cust_info';
 
--- ============================================================================
--- ERP Customer Information
--- Source file: datasets/source_erp/CUST_AZ12.csv
--- ============================================================================
+    COPY bronze.crm_cust_info
+    FROM '/Users/Shared/dwh_project/datasets/source_crm/cust_info.csv'
+    WITH (
+        FORMAT CSV,
+        HEADER TRUE,
+        DELIMITER ','
+    );
 
-TRUNCATE TABLE bronze.erp_cust_az12;
+    end_time := clock_timestamp();
 
-SELECT *
-FROM bronze.erp_cust_az12;
+    RAISE NOTICE '>> Load Duration: % seconds',
+        ROUND(EXTRACT(EPOCH FROM (end_time - start_time))::NUMERIC, 2);
 
-SELECT COUNT(*)
-FROM bronze.erp_cust_az12;
-
-
--- ============================================================================
--- ERP Customer Location
--- Source file: datasets/source_erp/LOC_A101.csv
--- ============================================================================
-
-TRUNCATE TABLE bronze.erp_loc_a101;
-
-SELECT *
-FROM bronze.erp_loc_a101;
-
-SELECT COUNT(*)
-FROM bronze.erp_loc_a101;
+    RAISE NOTICE '>> -------------';
 
 
--- ============================================================================
--- ERP Product Category Information
--- Source file: datasets/source_erp/PX_CAT_G1V2.csv
--- ============================================================================
+    -- ============================================================
+    -- CRM Product Information
+    -- ============================================================
 
-TRUNCATE TABLE bronze.erp_px_cat_g1v2;
+    start_time := clock_timestamp();
 
-SELECT *
-FROM bronze.erp_px_cat_g1v2;
+    RAISE NOTICE '>> Truncating Table: bronze.crm_prd_info';
 
-SELECT COUNT(*)
-FROM bronze.erp_px_cat_g1v2;
+    TRUNCATE TABLE bronze.crm_prd_info;
+
+    RAISE NOTICE '>> Inserting Data Into: bronze.crm_prd_info';
+
+    COPY bronze.crm_prd_info
+    FROM '/Users/Shared/dwh_project/datasets/source_crm/prd_info.csv'
+    WITH (
+        FORMAT CSV,
+        HEADER TRUE,
+        DELIMITER ','
+    );
+
+    end_time := clock_timestamp();
+
+    RAISE NOTICE '>> Load Duration: % seconds',
+        ROUND(EXTRACT(EPOCH FROM (end_time - start_time))::NUMERIC, 2);
+
+    RAISE NOTICE '>> -------------';
+
+
+    -- ============================================================
+    -- CRM Sales Details
+    -- ============================================================
+
+    start_time := clock_timestamp();
+
+    RAISE NOTICE '>> Truncating Table: bronze.crm_sales_details';
+
+    TRUNCATE TABLE bronze.crm_sales_details;
+
+    RAISE NOTICE '>> Inserting Data Into: bronze.crm_sales_details';
+
+    COPY bronze.crm_sales_details
+    FROM '/Users/Shared/dwh_project/datasets/source_crm/sales_details.csv'
+    WITH (
+        FORMAT CSV,
+        HEADER TRUE,
+        DELIMITER ','
+    );
+
+    end_time := clock_timestamp();
+
+    RAISE NOTICE '>> Load Duration: % seconds',
+        ROUND(EXTRACT(EPOCH FROM (end_time - start_time))::NUMERIC, 2);
+
+    RAISE NOTICE '>> -------------';
+
+
+    RAISE NOTICE '------------------------------------------------';
+    RAISE NOTICE 'Loading ERP Tables';
+    RAISE NOTICE '------------------------------------------------';
+
+
+    -- ============================================================
+    -- ERP Location
+    -- ============================================================
+
+    start_time := clock_timestamp();
+
+    RAISE NOTICE '>> Truncating Table: bronze.erp_loc_a101';
+
+    TRUNCATE TABLE bronze.erp_loc_a101;
+
+    RAISE NOTICE '>> Inserting Data Into: bronze.erp_loc_a101';
+
+    COPY bronze.erp_loc_a101
+    FROM '/Users/Shared/dwh_project/datasets/source_erp/LOC_A101.csv'
+    WITH (
+        FORMAT CSV,
+        HEADER TRUE,
+        DELIMITER ','
+    );
+
+    end_time := clock_timestamp();
+
+    RAISE NOTICE '>> Load Duration: % seconds',
+        ROUND(EXTRACT(EPOCH FROM (end_time - start_time))::NUMERIC, 2);
+
+    RAISE NOTICE '>> -------------';
+
+
+    -- ============================================================
+    -- ERP Customer Information
+    -- ============================================================
+
+    start_time := clock_timestamp();
+
+    RAISE NOTICE '>> Truncating Table: bronze.erp_cust_az12';
+
+    TRUNCATE TABLE bronze.erp_cust_az12;
+
+    RAISE NOTICE '>> Inserting Data Into: bronze.erp_cust_az12';
+
+    COPY bronze.erp_cust_az12
+    FROM '/Users/Shared/dwh_project/datasets/source_erp/CUST_AZ12.csv'
+    WITH (
+        FORMAT CSV,
+        HEADER TRUE,
+        DELIMITER ','
+    );
+
+    end_time := clock_timestamp();
+
+    RAISE NOTICE '>> Load Duration: % seconds',
+        ROUND(EXTRACT(EPOCH FROM (end_time - start_time))::NUMERIC, 2);
+
+    RAISE NOTICE '>> -------------';
+
+
+    -- ============================================================
+    -- ERP Product Category Information
+    -- ============================================================
+
+    start_time := clock_timestamp();
+
+    RAISE NOTICE '>> Truncating Table: bronze.erp_px_cat_g1v2';
+
+    TRUNCATE TABLE bronze.erp_px_cat_g1v2;
+
+    RAISE NOTICE '>> Inserting Data Into: bronze.erp_px_cat_g1v2';
+
+    COPY bronze.erp_px_cat_g1v2
+    FROM '/Users/Shared/dwh_project/datasets/source_erp/PX_CAT_G1V2.csv'
+    WITH (
+        FORMAT CSV,
+        HEADER TRUE,
+        DELIMITER ','
+    );
+
+    end_time := clock_timestamp();
+
+    RAISE NOTICE '>> Load Duration: % seconds',
+        ROUND(EXTRACT(EPOCH FROM (end_time - start_time))::NUMERIC, 2);
+
+    RAISE NOTICE '>> -------------';
+
+
+    batch_end_time := clock_timestamp();
+
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Loading Bronze Layer is Completed';
+
+    RAISE NOTICE 'Total Load Duration: % seconds',
+        ROUND(
+            EXTRACT(EPOCH FROM (batch_end_time - batch_start_time))::NUMERIC,
+            2
+        );
+
+    RAISE NOTICE '==========================================';
+
+
+EXCEPTION
+    WHEN OTHERS THEN
+
+        RAISE NOTICE '==========================================';
+        RAISE NOTICE 'ERROR OCCURRED DURING LOADING BRONZE LAYER';
+        RAISE NOTICE 'Error Message: %', SQLERRM;
+        RAISE NOTICE 'SQLSTATE: %', SQLSTATE;
+        RAISE NOTICE '==========================================';
+
+        RAISE;
+
+END;
+$$;
+
+CALL bronze.load_bronze();
