@@ -24,12 +24,13 @@ create table silver.crm_cust_info (
 DROP TABLE IF EXISTS silver.crm_prd_info;
 create table silver.crm_prd_info (
 	prd_id int,
+	cat_id varchar(50),
 	prd_key varchar(50),
 	prd_nm varchar(50),
 	prd_cost int,
 	prd_line varchar(50),
-	prd_start_dt timestamp,
-	prd_end_dt timestamp,
+	prd_start_dt date,
+	prd_end_dt date,
 	dwh_create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
