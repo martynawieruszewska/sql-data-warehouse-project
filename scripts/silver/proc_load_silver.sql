@@ -403,3 +403,5 @@ EXCEPTION
 
 END;
 $$;
+
+CALL silver.load_silver();
