@@ -42,3 +42,25 @@ select distinct gender from gold.dim_customers
 
 -- Product
 
+-- Duplicates
+select prd_key, count(*) from  (
+SELECT
+pn.prd_id,
+pn.cat_id,
+pn.prd_key,
+pn.prd_nm,
+pn.prd_cost,
+pn.prd_line,
+pn.prd_start_dt,
+pn.prd_end_dt,
+pc.cat,
+pc.subcat,
+pc.maintenance 
+FROM silver.crm_prd_info pn
+left join silver.erp_px_cat_g1v2 pc
+on pn.cat_id = pc.id
+where prd_end_dt is null -- filtered out historical data
+)t group by prd_key
+having count(*) > 1
+
+select * from gold.dim_customers
